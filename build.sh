@@ -16,7 +16,7 @@ export CROSS_COMPILE=${HOME}/android/uberbuild/out/aarch64-linux-android-4.9/bin
 DEFCONFIG="snoke_defconfig"
 
 # Kernel Details
-VER=".R0"
+VER=".R1"
 
 # Paths
 KERNEL_DIR=`pwd`
