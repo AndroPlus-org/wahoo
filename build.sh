@@ -12,11 +12,14 @@ clear
 THREAD="-j$(grep -c ^processor /proc/cpuinfo)"
 KERNEL="Image"
 DTBIMAGE="dtb"
+export CLANG_PATH=~/android/clang/clang-3859424/bin/
+export PATH=${CLANG_PATH}:${PATH}
+export CLANG_TRIPLE=aarch64-linux-gnu-
 export CROSS_COMPILE=${HOME}/android/uberbuild/out/aarch64-linux-android-4.9/bin/aarch64-linux-android-
 DEFCONFIG="snoke_defconfig"
 
 # Kernel Details
-VER=".R1"
+VER=".R3"
 
 # Paths
 KERNEL_DIR=`pwd`
@@ -40,8 +43,8 @@ function clean_all {
 
 function make_kernel {
 		echo
-		make $DEFCONFIG
-		make $THREAD
+		make CC=clang $DEFCONFIG
+		make CC=clang $THREAD
 
 }
 
