@@ -6275,7 +6275,7 @@ static int synaptics_rmi4_suspend(struct device *dev)
 		return 0;
 
 #ifdef CONFIG_WAKE_GESTURES
-	if (s2w_switch || dt2w_switch) {
+	if (s2w_switch || rmi4_data->enable_wakeup_gesture) {
 		if (!s2w_switch)
 			synaptics_rmi4_wakeup_gesture(rmi4_data, true);
 #else
