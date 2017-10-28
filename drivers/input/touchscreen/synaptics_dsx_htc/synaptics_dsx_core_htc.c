@@ -6300,6 +6300,14 @@ exit:
 	}
 	mutex_unlock(&exp_data.mutex);
 
+#ifdef CONFIG_WAKE_GESTURES
+	if (s2w_switch) {
+		rmi4_data->suspend = true;
+
+		return 0;
+	}
+#endif
+
 	gpio_set_value(rmi4_data->hw_if->board_data->switch_gpio, 1);
 	dev_dbg(rmi4_data->pdev->dev.parent, "%s: Switch I2C mux to SLPI\n",
 			__func__);
@@ -6320,9 +6328,21 @@ static int synaptics_rmi4_resume(struct device *dev)
 	if (rmi4_data->stay_awake)
 		return 0;
 
+#ifdef CONFIG_WAKE_GESTURES
+
+	if (!s2w_switch) {
+
+#endif
+
 	gpio_set_value(rmi4_data->hw_if->board_data->switch_gpio, 0);
 	dev_dbg(rmi4_data->pdev->dev.parent, "%s: Switch I2C mux to AP\n",
 			__func__);
+
+#ifdef CONFIG_WAKE_GESTURES
+
+	}
+
+#endif
 
 	synaptics_rmi4_free_fingers(rmi4_data);
 
