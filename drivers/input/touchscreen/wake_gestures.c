@@ -76,6 +76,10 @@
  
  /* Resources */
  int s2w_switch = S2W_DEFAULT;
+ bool dt2w_switch = false;
+ bool wg_switch = false;
+ bool wg_switch_temp = false;
+ bool wg_changed = false;
  int s2w_switch_temp; 
  bool dt2w_switch;
  static int s2s_switch = S2S_DEFAULT;
@@ -423,7 +427,7 @@
  static void dt2w_input_callback(struct work_struct *unused)
  {
  
- 	if (scr_suspended() && s2w_switch > 0 && dt2w_switch)
+ 	if (scr_suspended() && dt2w_switch)
  		detect_doubletap2wake(touch_x, touch_y, true);
  	return;
  }
@@ -537,6 +541,15 @@
  	.id_table	= wg_ids,
  };
  
+static void wake_gesture_changed(void)
+{
+	wg_switch_temp = (s2w_switch || dt2w_switch);
+
+	if (!scr_suspended())
+		wg_switch = wg_switch_temp;
+	else
+		wg_changed = true;
+}
  
  /*
   * SYSFS stuff below here
@@ -551,24 +564,17 @@
  	return count;
  }
  
- static ssize_t sweep2wake_dump(struct device *dev,
- 		struct device_attribute *attr, const char *buf, size_t count)
- {
- 	sscanf(buf, "%d ", &s2w_switch_temp);
- 	if (s2w_switch_temp < 0 || s2w_switch_temp > 15)
- 		s2w_switch_temp = 0;
- 		
- 	if (s2w_switch_temp == 0)
- 		set_internal_dt(dt2w_switch);
- 	else {
- 		set_internal_dt(false);
- 	}
- 
- 	if (!scr_suspended())
- 		s2w_switch = s2w_switch_temp;
- 
- 	return count;
- }
+static ssize_t sweep2wake_dump(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	sscanf(buf, "%d ", &s2w_switch);
+	if (s2w_switch < 0 || s2w_switch > 15)
+		s2w_switch = 0;
+		
+	wake_gesture_changed();
+
+	return count;
+}
  
  static DEVICE_ATTR(sweep2wake, (S_IWUSR|S_IRUGO),
  	sweep2wake_show, sweep2wake_dump);
@@ -604,22 +610,21 @@
  	return count;
  }
  
- static ssize_t doubletap2wake_dump(struct device *dev,
- 		struct device_attribute *attr, const char *buf, size_t count)
- {
- 
- 	int input;
- 	sscanf(buf, "%d ", &input);
- 	if (input < 0 || input > 1)
- 		input = 0;	
- 
- 	dt2w_switch = (input) ? true : false;		
- 	
- 	if (s2w_switch == 0 || s2w_switch_temp == 0)
- 		set_internal_dt(dt2w_switch);
- 
- 	return count;
- }
+static ssize_t doubletap2wake_dump(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+
+	int input;
+	sscanf(buf, "%d ", &input);
+	if (input < 0 || input > 1)
+		input = 0;	
+
+	dt2w_switch = (input) ? true : false;
+	wake_gesture_changed();
+
+	return count;
+}
+
  
  static DEVICE_ATTR(doubletap2wake, (S_IWUSR|S_IRUGO),
  	doubletap2wake_show, doubletap2wake_dump);
@@ -697,7 +702,6 @@
  		
  	wake_lock_init(&dt2w_wakelock, WAKE_LOCK_SUSPEND, "dt2w_wakelock");
  		
- 	//dt2w_switch = get_internal_dt();
  		
  #if (WAKE_GESTURES_ENABLED)
  	gesture_dev = input_allocate_device();
