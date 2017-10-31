@@ -3399,11 +3399,11 @@ static void __sched notrace __schedule(bool preempt)
 	rq->clock_skip_update = 0;
 
 	if (likely(prev != next)) {
+		u64 now;
 #ifdef CONFIG_SCHED_WALT
 		if (!prev->on_rq)
 			prev->last_sleep_ts = wallclock;
 #endif
-		u64 now;
 		rq->nr_switches++;
 		rq->curr = next;
 		++*switch_count;
